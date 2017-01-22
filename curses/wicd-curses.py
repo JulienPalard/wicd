@@ -46,7 +46,6 @@ import urwid
 # DBus communication stuff
 from dbus import DBusException
 # It took me a while to figure out that I have to use this.
-import gobject
 
 # Other important wicd-related stuff
 from wicd import wpath
@@ -86,52 +85,6 @@ ui = None
 loop = None
 bus = daemon = wireless = wired = None
 
-########################################
-##### SUPPORT CLASSES
-########################################
-# Yay for decorators!
-def wrap_exceptions(func):
-    """ Decorator to wrap exceptions. """
-    def wrapper(*args, **kargs):
-        try:
-            return func(*args, **kargs)
-        except KeyboardInterrupt:
-            #gobject.source_remove(redraw_tag)
-            loop.quit()
-            ui.stop()
-            print("\n" + _('Terminated by user'), file=sys.stderr)
-            #raise
-        except DBusException:
-            loop.quit()
-            ui.stop()
-            print("\n" + _('DBus failure! '
-                'This is most likely caused by the wicd daemon '
-                'stopping while wicd-curses is running. '
-                'Please restart the daemon, and then restart wicd-curses.'), file=sys.stderr)
-            raise
-        except:
-            # Quit the loop
-            #if 'loop' in locals():
-            loop.quit()
-            # Zap the screen
-            ui.stop()
-            # Print out standard notification:
-            # This message was far too scary for humans, so it's gone now.
-            # print >> sys.stderr, "\n" + _('EXCEPTION! Please report this '
-            # 'to the maintainer and file a bug report with the backtrace '
-            # 'below:')
-            # Flush the buffer so that the notification is always above the
-            # backtrace
-            sys.stdout.flush()
-            # Raise the exception
-            raise
-
-    wrapper.__name__ = func.__name__
-    wrapper.__module__ = func.__module__
-    wrapper.__dict__ = func.__dict__
-    wrapper.__doc__ = func.__doc__
-    return wrapper
-
 
 ########################################
 ##### SUPPORT FUNCTIONS
@@ -139,7 +92,6 @@ def wrap_exceptions(func):
 
 # Look familiar?  These two functions are clones of functions found in wicd's
 # gui.py file, except that now set_status is a function passed to them.
-@wrap_exceptions
 def check_for_wired(wired_ip, set_status):
     """ Determine if wired is active, and if yes, set the status. """
     if wired_ip and wired.CheckPluggedIn():
@@ -151,7 +103,6 @@ def check_for_wired(wired_ip, set_status):
         return False
 
 
-@wrap_exceptions
 def check_for_wireless(iwconfig, wireless_ip, set_status):
     """ Determine if wireless is active, and if yes, set the status. """
     if not wireless_ip:
@@ -161,7 +112,7 @@ def check_for_wireless(iwconfig, wireless_ip, set_status):
     if not network:
         return False
 
-    network = misc.to_unicode(network)
+    # network = misc.to_unicode(network)
     if daemon.GetSignalDisplayType() == 0:
         strength = wireless.GetCurrentSignalStrength(iwconfig)
     else:
@@ -169,12 +120,11 @@ def check_for_wireless(iwconfig, wireless_ip, set_status):
 
     if strength is None:
         return False
-    strength = misc.to_unicode(daemon.FormatSignalForPrinting(strength))
-    ip = misc.to_unicode(wireless_ip)
+    strength = daemon.FormatSignalForPrinting(strength)
     set_status(_('Connected to $A at $B (IP: $C)').replace
                     ('$A', network).replace
                     ('$B', strength).replace
-                    ('$C', ip))
+                    ('$C', wireless_ip))
     return True
 
 
@@ -323,7 +273,7 @@ _('Once there, you can adjust (or add) the "beforescript", "afterscript", '
     # limit complications, it has been deactivated.  If you want to run it,
     # be my guest.  Be sure to deactivate the above stuff first.
 
-    #loop.quit()
+    #raise urwid.ExitMainLoop()
     #ui.stop()
     #argv = netname + ' ' +nettype
 
@@ -365,7 +315,7 @@ def gen_list_header():
 
 """ Some people use CTRL-\ to quit the application (SIGQUIT) """
 def handle_sigquit(signal_number, stack_frame):
-    loop.quit()
+    raise urwid.ExitMainLoop()
     ui.stop()
 
 ########################################
@@ -597,7 +547,6 @@ class AdHocDialog(Dialog2):
         return exitcode, data
 
 
-# TODO
 class ForgetDialog(Dialog2):
     """ Dialog2 that removes/forgets a network. """
     def __init__(self):
@@ -713,6 +662,8 @@ class appGUI():
         self.update_netlist(force_check=True, firstrun=True)
 
         # Keymappings proposed by nanotube in #wicd
+        def exitMainLoop():
+            raise urwid.Exitmainloop()
         keys = [
             ('H', _('Help'), None),
             ('right', _('Config'), None),
@@ -724,7 +675,7 @@ class appGUI():
             ('P', _('Prefs'), None),
             ('I', _('Hidden'), None),
             ('A', _('About'), None),
-            ('Q', _('Quit'), loop.quit)
+            ('Q', _('Quit'), exitMainLoop)
         ]
 
         self.primaryCols = OptCols(keys, self.handle_keys)
@@ -829,7 +780,6 @@ class appGUI():
 
     # Be clunky until I get to a later stage of development.
     # Update the list of networks.  Usually called by DBus.
-    @wrap_exceptions
     def update_netlist(self, state=None, x=None, force_check=False,
       firstrun=False):
         """ Update the list of networks. """
@@ -900,9 +850,10 @@ class appGUI():
                     )
                 )
 
-    @wrap_exceptions
-    def update_status(self):
+    def update_status(self, loop=None, user_data=None):
         """ Update the footer / statusbar. """
+        if loop:
+            loop.set_alarm_in(2, self.update_status)
         wired_connecting = wired.CheckIfWiredConnecting()
         wireless_connecting = wireless.CheckIfWirelessConnecting()
         self.connecting = wired_connecting or wireless_connecting
@@ -911,7 +862,8 @@ class appGUI():
         if self.connecting:
             if not self.conn_status:
                 self.conn_status = True
-                gobject.timeout_add(250, self.set_connecting_status, fast)
+                if loop:
+                    loop.set_alarm_in(.25, self.set_connecting_status, fast)
             return True
         else:
             if check_for_wired(wired.GetWiredIP(''), self.set_status):
@@ -928,7 +880,7 @@ class appGUI():
                 self.update_ui()
                 return True
 
-    def set_connecting_status(self, fast):
+    def set_connecting_status(self, loop, fast):
         """ Set connecting status. """
         wired_connecting = wired.CheckIfWiredConnecting()
         wireless_connecting = wireless.CheckIfWirelessConnecting()
@@ -978,7 +930,6 @@ class appGUI():
         """ Handle DBus scan finish. """
         # I'm pretty sure that I'll need this later.
         #if not self.connecting:
-        #    gobject.idle_add(self.refresh_networks, None, False, None)
         self.unlock_screen()
         self.scanning = False
 
@@ -1006,7 +957,7 @@ class appGUI():
         if not self.diag:
             # Handle keystrokes
             if "f8" in keys or 'Q' in keys or 'q' in keys:
-                loop.quit()
+                raise urwid.ExitMainLoop()
                 #return False
             if "f5" in keys or 'R' in keys:
                 self.lock_screen()
@@ -1147,23 +1098,14 @@ class appGUI():
         return True
 
     # Redraw the screen
-    @wrap_exceptions
     def update_ui(self, from_key=False):
         """ Redraw the screen. """
         if not ui._started:
             return False
 
-        input_data = ui.get_input_nonblocking()
-        # Resolve any "alarms" in the waiting
-        self.handle_keys(input_data[1])
-
         # Update the screen
         canvas = self.frame.render((self.size), True)
         ui.draw_screen((self.size), canvas)
-        # Get the input data
-        if self.update_tag is not None:
-            gobject.source_remove(self.update_tag)
-        #if from_key:
         return False
 
     def connect(self, nettype, networkid, networkentry=None):
@@ -1221,17 +1163,18 @@ def main():
     # This is a wrapper around a function that calls another a function that
     # is a wrapper around a infinite loop.  Fun.
     urwid.set_encoding('utf8')
-    ui.run_wrapper(run)
+    return ui
 
 
-@wrap_exceptions
 def run():
     """ Run the UI. """
     global loop
-    loop = gobject.MainLoop()
+    ui = main()
+    app = appGUI()
+    loop = urwid.MainLoop(app.frame, unhandled_input=app.handle_keys,
+                          screen=ui)
 
     ui.set_mouse_tracking()
-    app = appGUI()
 
     # Connect signals and whatnot to UI screen control functions
     bus.add_signal_receiver(app.dbus_scan_finished, 'SendEndScanSignal',
@@ -1242,13 +1185,7 @@ def run():
     bus.add_signal_receiver(app.update_netlist, 'StatusChanged',
                             'org.wicd.daemon')
     # Update the connection status on the bottom every 2 s.
-    gobject.timeout_add(2000, app.update_status)
-
-    # Get input file descriptors and add callbacks to the ui-updating function
-    fds = ui.get_input_descriptors()
-    for fd in fds:
-        gobject.io_add_watch(fd, gobject.IO_IN, app.call_update_ui)
-    app.update_ui()
+    loop.set_alarm_in(2, app.update_status)
     loop.run()
 
 
@@ -1302,4 +1239,4 @@ if __name__ == '__main__':
     #    help="enable logging of wicd-curses (currently does nothing)")
 
     (options, args) = parser.parse_args()
-    main()
+    run()

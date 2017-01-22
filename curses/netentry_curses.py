@@ -538,11 +538,9 @@ class WirelessSettingsDialog(AdvancedSettingsDialog):
         self.bitrates = wireless.GetAvailableBitrates()
         self.bitrates.append('auto')
         self.bitrate_combo.set_list(self.bitrates)
-        self.bitrate_combo.set_focus(
-            self.bitrates.index(
-                wireless.GetWirelessProperty(networkID, 'bitrate')
-            )
-        )
+        bitrate = wireless.GetWirelessProperty(networkID, 'bitrate')
+        if bitrate is not None:
+            self.bitrate_combo.set_focus(self.bitrates.index(bitrate))
         self.allow_lower_bitrates_chkbox.set_state(
             to_bool(self.format_entry(networkID, 'allow_lower_bitrates'))
         )

@@ -27,11 +27,10 @@ import locale
 import sys
 import re
 import string
-import gobject
 from threading import Thread
 from subprocess import Popen, STDOUT, PIPE, call
 from subprocess import getoutput
-from itertools import repeat, chain
+from itertools import repeat, chain, zip_longest
 from pipes import quote
 import socket
 
@@ -75,7 +74,7 @@ ROUTE = 2
 GKSUDO = 1
 KDESU = 2
 KTSUSS = 3
-_sudo_dict = { 
+_sudo_dict = {
     AUTO : "",
     GKSUDO : "gksudo",
     KDESU : "kdesu",
@@ -110,7 +109,7 @@ _status_dict = {
 class WicdError(Exception):
     """ Custom Exception type. """
     pass
-    
+
 
 def Run(cmd, include_stderr=False, return_pipe=False,
         return_obj=False, return_retcode=True):
@@ -144,34 +143,34 @@ def Run(cmd, include_stderr=False, return_pipe=False,
         std_in = PIPE
     else:
         std_in = None
-    
+
     # We need to make sure that the results of the command we run
     # are in English, so we set up a temporary environment.
     tmpenv = os.environ.copy()
     tmpenv["LC_ALL"] = "C"
     tmpenv["LANG"] = "C"
-    
+
     try:
         f = Popen(cmd, shell=False, stdout=PIPE, stdin=std_in, stderr=err,
                   close_fds=fds, cwd='/', env=tmpenv)
     except OSError as e:
         print("Running command %s failed: %s" % (str(cmd), str(e)))
         return ""
-        
+
     if return_obj:
         return f
     if return_pipe:
         return f.stdout
     else:
         return f.communicate()[0]
-    
+
 def LaunchAndWait(cmd):
     """ Launches the given program with the given arguments, then blocks.
 
     cmd : A list contained the program name and its arguments.
 
     returns: The exit code of the process.
-    
+
     """
     if not isinstance(cmd, list):
         cmd = to_unicode(str(cmd))
@@ -215,7 +214,7 @@ def PromptToStartDaemon():
         msg = '--message'
     else:
         msg = '--caption'
-    sudo_args = [sudo_prog, msg, 
+    sudo_args = [sudo_prog, msg,
                  _("Wicd needs to access your computer's network cards."),
                  daemonloc]
     os.spawnvpe(os.P_WAIT, sudo_prog, sudo_args, os.environ)
@@ -309,7 +308,7 @@ def ParseEncryption(network):
             if line.strip().startswith("}"):
                 # This is the last line, so we just write it.
                 config_file = ''.join([config_file, line])
-            elif "$_" in line: 
+            elif "$_" in line:
                 for cur_val in re.findall('\$_([A-Z0-9_]+)', line):
                     if cur_val:
                         rep_val = network.get(cur_val.lower())
@@ -329,7 +328,7 @@ def ParseEncryption(network):
             else:  # Just a regular entry.
                 config_file = ''.join([config_file, line])
 
-    # Write the data to the files then chmod them so they can't be read 
+    # Write the data to the files then chmod them so they can't be read
     # by normal users.
     if network.get('bssid'):
         file_name = network['bssid'].replace(":", "").lower()
@@ -361,7 +360,7 @@ def LoadEncryptionMethods(wired = False):
     except IOError as e:
         print("Fatal Error: template index file is missing.")
         raise IOError(e)
-    
+
     # Parse each encryption method
     encryptionTypes = []
     for enctype in enctypes:
@@ -494,9 +493,9 @@ def to_unicode(x):
                 ret = x.decode('latin-1').encode('utf-8')
             except UnicodeError:
                 ret = x.decode('utf-8', 'replace').encode('utf-8')
-            
+
     return ret
-    
+
 def RenameProcess(new_name):
     """ Renames the process calling the function to the given name. """
     if 'linux' not in sys.platform:
@@ -511,13 +510,13 @@ def RenameProcess(new_name):
     except:
         print("rename failed")
         return False
-    
+
 def detect_desktop_environment():
-    """ Try to determine which desktop environment is in use. 
-    
+    """ Try to determine which desktop environment is in use.
+
     Choose between kde, gnome, or xfce based on environment
     variables and a call to xprop.
-    
+
     """
     desktop_environment = 'generic'
     if os.environ.get('KDE_FULL_SESSION') == 'true':
@@ -551,27 +550,27 @@ def choose_sudo_prog(prog_num=0):
     desktop_env = detect_desktop_environment()
     env_path = os.environ['PATH'].split(":")
     paths = []
-    
+
     if desktop_env == "kde":
         progs = ["kdesu", "kdesudo", "ktsuss"]
     else:
         progs = ["gksudo", "gksu", "ktsuss"]
-        
+
     for prog in progs:
         paths.extend([os.path.join(p, prog) for p in env_path])
-        
+
     for path in paths:
         if os.path.exists(path):
             return path
     return ""
 
 def find_path(cmd):
-    """ Try to find a full path for a given file name. 
-    
+    """ Try to find a full path for a given file name.
+
     Search the all the paths in the environment variable PATH for
     the given file name, or return None if a full path for
     the file can not be found.
-    
+
     """
     paths = os.getenv("PATH").split(':')
     if not paths:
@@ -628,9 +627,9 @@ def timeout_add(time, func, milli=False):
 
 def izip_longest(*args, **kwds):
     """ Implement the itertools.izip_longest method.
-    
+
     We implement the method here because its new in Python 2.6.
-    
+
     """
     # izip_longest('ABCD', 'xy', fillvalue='-') --> Ax By C- D-
     fillvalue = kwds.get('fillvalue')

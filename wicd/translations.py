@@ -41,8 +41,8 @@ def get_gettext():
     try:
         # This avoids a bug: locale.getdefaultlocale() prefers
         # LC_CTYPE over LANG/LANGUAGE
-        lc, encoding = locale.getdefaultlocale(envvars=('LC_MESSAGES', 
-                                                        'LC_ALL', 'LANG', 
+        lc, encoding = locale.getdefaultlocale(envvars=('LC_MESSAGES',
+                                                        'LC_ALL', 'LANG',
                                                         'LANGUAGE'))
     except ValueError as e:
         print(str(e))
@@ -50,9 +50,9 @@ def get_gettext():
     if (lc):
         langs += [lc]
     langs += ["en_US"]
-    lang = gettext.translation('wicd', local_path, languages=langs, 
+    lang = gettext.translation('wicd', local_path, languages=langs,
                                fallback=True)
-    return lang.ugettext
+    return lang.gettext
 
 _ = get_gettext()
 
