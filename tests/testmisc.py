@@ -123,28 +123,6 @@ class TestMisc(unittest.TestCase):
     def test_none_to_string_3(self):
         self.assertEqual(misc.noneToString(None), 'None')
 
-    ####################################################################
-    # misc.to_unicode actually converts to utf-8, which is type str    #
-    ####################################################################
-
-    def test_to_unicode_1(self):
-        self.assertEqual(misc.to_unicode('邪悪'), '邪悪')
-
-    def test_to_unicode_2(self):
-        self.assertEqual(misc.to_unicode('邪悪'), '邪悪')
-
-    def test_to_unicode_3(self):
-        self.assertEqual(misc.to_unicode('abcdef'), 'abcdef')
-
-    def test_to_unicode_4(self):
-        self.assertEqual(type(misc.to_unicode('abcdef'.encode('latin-1'))), str)
-
-    def test_to_unicode_5(self):
-        self.assertEqual(misc.to_unicode("berkåk"), "berkåk")
-
-    def test_to_unicode_6(self):
-        self.assertEqual(misc.to_unicode('berk\xe5k'), "berkåk")
-
     def test_none_to_blank_string_1(self):
         self.assertEqual(misc.noneToBlankString(None), '')
 

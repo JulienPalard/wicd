@@ -131,7 +131,6 @@ def Run(cmd, include_stderr=False, return_pipe=False,
 
     """
     if not isinstance(cmd, list):
-        cmd = to_unicode(str(cmd))
         cmd = cmd.split()
     if include_stderr:
         err = STDOUT
@@ -152,7 +151,7 @@ def Run(cmd, include_stderr=False, return_pipe=False,
 
     try:
         f = Popen(cmd, shell=False, stdout=PIPE, stdin=std_in, stderr=err,
-                  close_fds=fds, cwd='/', env=tmpenv)
+                  close_fds=fds, cwd='/', env=tmpenv, universal_newlines=True)
     except OSError as e:
         print("Running command %s failed: %s" % (str(cmd), str(e)))
         return ""
@@ -173,7 +172,6 @@ def LaunchAndWait(cmd):
 
     """
     if not isinstance(cmd, list):
-        cmd = to_unicode(str(cmd))
         cmd = cmd.split()
     p = Popen(cmd, shell=False, stdout=PIPE, stderr=STDOUT, stdin=None)
     return p.wait()
@@ -449,7 +447,7 @@ def noneToString(text):
     if text in (None, ""):
         return "None"
     else:
-        return to_unicode(text)
+        return text
 
 def sanitize_config(s):
     """ Sanitize property names to be used in config-files. """
@@ -471,30 +469,6 @@ def sanitize_escaped(s):
         c = s[lastpos+2:lastpos+4]  # i.e. get the next two characters
         s = s.replace('\\x'+c, chr(int(c, 16)))
     return s
-
-def to_unicode(x):
-    """ Attempts to convert a string to utf-8. """
-    # If this is a unicode string, encode it and return
-    if not isinstance(x, str):
-        return x
-    if isinstance(x, str):
-        return x.encode('utf-8')
-
-    x = sanitize_escaped(x)
-
-    encoding = locale.getpreferredencoding()
-    try:
-        ret = x.decode(encoding).encode('utf-8')
-    except UnicodeError:
-        try:
-            ret = x.decode('utf-8').encode('utf-8')
-        except UnicodeError:
-            try:
-                ret = x.decode('latin-1').encode('utf-8')
-            except UnicodeError:
-                ret = x.decode('utf-8', 'replace').encode('utf-8')
-
-    return ret
 
 def RenameProcess(new_name):
     """ Renames the process calling the function to the given name. """

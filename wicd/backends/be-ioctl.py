@@ -231,7 +231,7 @@ class WiredInterface(Interface, BaseWiredInterface):
         return bool(buff.tolist()[1])
 
     def _mii_get_plugged_in(self):
-        """ Use mii-tool to determine the physical connection state. 
+        """ Use mii-tool to determine the physical connection state.
 
         Returns:
         True if a link is detected, False otherwise.
@@ -271,7 +271,7 @@ class WirelessInterface(Interface, BaseWirelessInterface):
     @neediface([])
     def GetNetworks(self, essid=None):
         """ Get a list of available wireless networks.
-	
+
         NOTE: the essid parameter is not used here,
         it was added for the iwlist scan for hidden networks.
 
@@ -282,7 +282,7 @@ class WirelessInterface(Interface, BaseWirelessInterface):
         if not IWSCAN_AVAIL:
             # Use the slow version if python-iwscan isn't available.
             return BaseWirelessInterface.GetNetworks(self)
-        
+
         if not self.scan_iface:
             try:
                 self.scan_iface = iwscan.WirelessInterface(self.iface)
@@ -300,13 +300,9 @@ class WirelessInterface(Interface, BaseWirelessInterface):
     def _parse_ap(self, cell):
         """ Parse a single cell from the python-iwscan list. """
         ap = {}
-        try:
-            ap['essid'] = misc.to_unicode(cell['essid'])
-        except UnicodeError:
-            print('Unicode problem with the current network essid, ignoring!!')
-            return None
+        ap['essid'] = cell['essid']
 
-        if ap['essid'] in [ "", '<hidden>']:
+        if ap['essid'] in ["", '<hidden>']:
             ap['essid'] = '<hidden>'
             ap['hidden'] = True
         else:
@@ -345,7 +341,7 @@ class WirelessInterface(Interface, BaseWirelessInterface):
         if misc.RunRegex(signaldbm_pattern, cell["stats"]):
             ap['strength'] = misc.RunRegex(signaldbm_pattern, cell["stats"])
         elif self.wpa_driver != RALINK_DRIVER:  # This is already set for ralink
-            ap['strength'] = -1  
+            ap['strength'] = -1
 
         return ap
 
@@ -385,7 +381,7 @@ class WirelessInterface(Interface, BaseWirelessInterface):
         if not WPACTRL_AVAIL:
             # If we don't have python-wpactrl, use the slow version.
             return BaseWirelessInterface.ValidateAuthentication(self, auth_time)
-        
+
         # Right now there's no way to do this for ralink drivers
         if self.wpa_driver == RALINK_DRIVER:
             return True

@@ -30,7 +30,7 @@ import sys, os
 from configparser import RawConfigParser, ParsingError
 import codecs
 
-from wicd.misc import Noneify, to_unicode
+from wicd.misc import Noneify
 
 from dbus import Int32
 
@@ -67,14 +67,14 @@ class ConfigManager(RawConfigParser):
 
     def __repr__(self):
         return self.config_file
-    
+
     def __str__(self):
         return self.config_file
-    
+
     def get_config(self):
         """ Returns the path to the loaded config file. """
         return self.config_file
-        
+
     def set_option(self, section, option, value, write=False):
         """ Wrapper around ConfigParser.set
 
@@ -82,12 +82,11 @@ class ConfigManager(RawConfigParser):
         Also forces all the values being written to type str, and
         adds the section the option should be written to if it
         doesn't exist already.
-        
+
         """
         if not self.has_section(section):
             self.add_section(section)
         if isinstance(value, str):
-            value = to_unicode(value)
             if value.startswith(' ') or value.endswith(' '):
                 value = "%(ws)s%(value)s%(ws)s" % {"value" : value,
                                                    "ws" : self.mrk_ws}
@@ -98,14 +97,14 @@ class ConfigManager(RawConfigParser):
     def set(self, *args, **kargs):
         """ Calls the set_option method. """
         self.set_option(*args, **kargs)
-        
+
     def get_option(self, section, option, default="__None__"):
-        """ Wrapper around ConfigParser.get. 
-        
+        """ Wrapper around ConfigParser.get.
+
         Automatically adds any missing sections, adds the ability
         to write a default value, and if one is provided prints if
         the default or a previously saved value is returned.
-        
+
         """
         if not self.has_section(section):
             if default != "__None__":
@@ -115,10 +114,9 @@ class ConfigManager(RawConfigParser):
 
         if self.has_option(section, option):
             ret = RawConfigParser.get(self, section, option)
-            if (isinstance(ret, str) and ret.startswith(self.mrk_ws) 
+            if (isinstance(ret, str) and ret.startswith(self.mrk_ws)
                 and ret.endswith(self.mrk_ws)):
                 ret = ret[3:-3]
-            ret = to_unicode(ret)
             if default:
                 if self.debug:
                     # mask out sensitive information
@@ -138,7 +136,7 @@ class ConfigManager(RawConfigParser):
                 ret = default
             else:
                 ret = None
-        
+
         # Try to intelligently handle the type of the return value.
         try:
             if not ret.startswith('0') or len(ret) == 1:
@@ -151,12 +149,12 @@ class ConfigManager(RawConfigParser):
                 Int32(ret)
             except OverflowError:
                 ret = str(ret)
-        return to_unicode(ret)
-    
+        return ret
+
     def get(self, *args, **kargs):
         """ Calls the get_option method """
         return self.get_option(*args, **kargs)
-    
+
     def _write_one(self):
         """ Writes the loaded config file to disk. """
         for section in self.sections():
@@ -165,17 +163,17 @@ class ConfigManager(RawConfigParser):
         configfile = open(self.config_file, 'w')
         RawConfigParser.write(self, configfile)
         configfile.close()
-    
+
     def remove_section(self, section):
         """ Wrapper around the ConfigParser.remove_section() method.
-        
+
         This method only calls the ConfigParser.remove_section() method
         if the section actually exists.
-        
+
         """
         if self.has_section(section):
             RawConfigParser.remove_section(self, section)
-            
+
     def reload(self):
         """ Re-reads the config file, in case it was edited out-of-band. """
         self.read(self.config_file)
@@ -243,4 +241,3 @@ class ConfigManager(RawConfigParser):
                 p.set(sname, iname, value)
             p.remove_option(sname, '_filename_')
         p._write_one()
-
