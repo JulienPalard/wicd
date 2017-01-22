@@ -1,4 +1,5 @@
 experimental.wpr
+__pycache__/
 install.log
 uninstall.log
 .bzrignore
