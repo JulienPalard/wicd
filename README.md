@@ -2,7 +2,7 @@
 
 ## Why this fork
 
- - To fixes opened issues likes `UnicodeDecodeError: 'ascii' codec
+ - To fix opened issues likes `UnicodeDecodeError: 'ascii' codec
 can't decode byte 0xe0 in position 0: ordinal not in
 range(128)`.
  - To try to port wicd to Python 3.
