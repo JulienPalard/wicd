@@ -217,7 +217,8 @@ class configure(Command):
         # or the path is not a proper absolute path, raise an error
         try:
             pmtemp = subprocess.Popen(["pkg-config", "--variable=pm_sleephooks",
-                                       "pm-utils"], stdout=subprocess.PIPE)
+                                       "pm-utils"], stdout=subprocess.PIPE,
+                                      universal_newlines=True)
             returncode = pmtemp.wait() # let it finish, and get the exit code
             pmutils_candidate = pmtemp.stdout.readline().strip() # read stdout
             if len(pmutils_candidate) == 0 or returncode != 0 or \
@@ -229,7 +230,8 @@ class configure(Command):
             pass # use our default
 
         try:
-            kdetemp = subprocess.Popen(["kde-config","--prefix"], stdout=subprocess.PIPE)
+            kdetemp = subprocess.Popen(["kde-config","--prefix"], stdout=subprocess.PIPE,
+                                       universal_newlines=True)
             returncode = kdetemp.wait() # let it finish, and get the exit code
             kdedir_candidate = kdetemp.stdout.readline().strip() # read stdout
             if len(kdedir_candidate) == 0 or returncode != 0 or \
@@ -240,7 +242,8 @@ class configure(Command):
         except (OSError, ValueError):
             # If kde-config isn't present, we'll check for kde-4.x
             try:
-                kde4temp = subprocess.Popen(["kde4-config","--prefix"], stdout=subprocess.PIPE)
+                kde4temp = subprocess.Popen(["kde4-config","--prefix"], stdout=subprocess.PIPE,
+                                            universal_newlines=True)
                 returncode = kde4temp.wait() # let it finish, and get the exit code
                 kde4dir_candidate = kde4temp.stdout.readline().strip() # read stdout
                 if len(kde4dir_candidate) == 0 or returncode != 0 or \
@@ -617,7 +620,8 @@ class compile_translations(Command):
                 compile_po = False
                 try:
                     msgfmt = subprocess.Popen(['msgfmt', '--statistics', pofile,
-                        '-o', '/dev/null'], stderr=subprocess.PIPE)
+                                               '-o', '/dev/null'], stderr=subprocess.PIPE,
+                                              universal_newlines=True)
                     returncode = msgfmt.wait() # let it finish, and get the exit code
                     output = msgfmt.stderr.readline().strip()
                     if len(output) == 0 or returncode != 0:
