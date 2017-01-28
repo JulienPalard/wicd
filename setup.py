@@ -29,9 +29,8 @@ from glob import glob
 
 # Be sure to keep this updated!
 # VERSIONNUMBER
-VERSION_NUM = '1.7.4'
-# REVISION_NUM is automatically updated
-REVISION_NUM = 'unknown'
+VERSION_NUM = '1.7.5'
+REVISION_NUM = '1'
 CURSES_REVNO = 'uimod'
 
 data = []
@@ -43,17 +42,6 @@ empty_file = 'other/.empty_on_purpose'
 # change to the directory setup.py is contained in
 os.chdir(os.path.abspath(os.path.split(__file__)[0]))
 
-try:
-    if os.path.exists('.bzr') and os.system('bzr > /dev/null 2>&1') == 0:
-        try:
-            os.system('bzr version-info --python > vcsinfo.py')
-        except:
-            pass
-    import vcsinfo
-    REVISION_NUM = vcsinfo.version_info['revno']
-except Exception as e:
-    print('failed to find revision number:')
-    print(e)
 
 class build(_build):
     sub_commands = _build.sub_commands + [('compile_translations', None)]
@@ -69,7 +57,7 @@ class build(_build):
 
 class configure(Command):
     description = "configure the paths that Wicd will be installed to"
-    
+
     user_options = [
         # The first bunch is DIRECTORIES - they need to end with a slash ("/"),
         # which will automatically be tacked on in the finalize_options method
@@ -106,10 +94,10 @@ class configure(Command):
         ('docdir=', None, 'set the directory for the documentation'),
         ('mandir=', None, 'set the directory for the man pages'),
         ('kdedir=', None, 'set the kde autostart directory'),
-        
-        # Anything after this is a FILE; in other words, a slash ("/") will 
+
+        # Anything after this is a FILE; in other words, a slash ("/") will
         # not automatically be added to the end of the path.
-        # Do NOT remove the python= entry, as it signals the beginning of 
+        # Do NOT remove the python= entry, as it signals the beginning of
         # the file section.
         ('python=', None, 'set the path to the Python executable'),
         ('pidfile=', None, 'set the pid file'),
@@ -135,7 +123,7 @@ class configure(Command):
         ('no-install-gnome-shell-extensions', None, 'do not install the Gnome Shell extension'),
         ('no-use-notifications', None, 'do not ever allow the use of libnotify notifications')
         ]
-        
+
     def initialize_options(self):
         self.lib = '/usr/lib/wicd/'
         self.share = '/usr/share/wicd/'
@@ -170,7 +158,7 @@ class configure(Command):
         self.mandir = '/usr/share/man/'
         self.kdedir = '/usr/share/autostart/'
         self.distro = 'auto'
-        
+
         self.no_install_init = False
         self.no_install_man = False
         self.no_install_i18n = False
@@ -187,7 +175,7 @@ class configure(Command):
 
         # Determine the default init file location on several different distros
         self.distro_detect_failed = False
-        
+
         self.initfile = 'init/default/wicd'
         # ddistro is the detected distro
         if os.path.exists('/etc/redhat-release'):
@@ -223,12 +211,12 @@ class configure(Command):
 
         # Try to get the pm-utils sleep hooks directory from pkg-config and
         # the kde prefix from kde-config
-        # Don't run these in a shell because it's not needed and because shell 
+        # Don't run these in a shell because it's not needed and because shell
         # swallows the OSError we would get if {pkg,kde}-config do not exist
-        # If we don't get anything from *-config, or it didn't run properly, 
+        # If we don't get anything from *-config, or it didn't run properly,
         # or the path is not a proper absolute path, raise an error
         try:
-            pmtemp = subprocess.Popen(["pkg-config", "--variable=pm_sleephooks", 
+            pmtemp = subprocess.Popen(["pkg-config", "--variable=pm_sleephooks",
                                        "pm-utils"], stdout=subprocess.PIPE)
             returncode = pmtemp.wait() # let it finish, and get the exit code
             pmutils_candidate = pmtemp.stdout.readline().strip() # read stdout
@@ -261,7 +249,7 @@ class configure(Command):
                 else:
                     self.kdedir = kde4dir_candidate + '/share/autostart'
             except (OSError, ValueError):
-                # If neither kde-config nor kde4-config are not present or 
+                # If neither kde-config nor kde4-config are not present or
                 # return an error, then we can assume that kde isn't installed
                 # on the user's system
                 self.no_install_kde = True
@@ -358,9 +346,9 @@ class configure(Command):
             else:
                 cur_arg = argument[0]
                 cur_arg_value = getattr(self, cur_arg.replace('-', '_'))
-                print("Found switch %s %s" % (argument, cur_arg_value)) 
+                print("Found switch %s %s" % (argument, cur_arg_value))
                 values.append((cur_arg, bool(cur_arg_value)))
-        
+
         print('Replacing values in template files...')
         for item in os.listdir('in'):
             if item.endswith('.in'):
@@ -383,9 +371,9 @@ class configure(Command):
                     line = line.replace('%VERSION%', str(VERSION_NUM))
                     line = line.replace('%REVNO%', str(REVISION_NUM))
                     line = line.replace('%CURSES_REVNO%', str(CURSES_REVNO))
-                        
+
                     item_out.write(line)
-                
+
                 item_out.close()
                 item_in.close()
                 shutil.copymode(original_name, final_name)
@@ -398,10 +386,10 @@ class clear_generated(Command):
 
     def initialize_options(self):
         pass
-        
+
     def finalize_options(self):
         pass
-        
+
     def run(self):
         print('Removing completed template files...')
         for item in os.listdir('in'):
@@ -550,15 +538,15 @@ class install(_install):
 
 class test(Command):
     description = "run Wicd's unit tests"
-	
+
     user_options = []
-	
+
     def initialize_options(self):
         pass
-        
+
     def finalize_options(self):
         pass
-        
+
     def run(self):
         print("importing tests")
         import tests
@@ -579,7 +567,7 @@ class update_message_catalog(Command):
     def run(self):
         os.system('pybabel extract . -o po/wicd.pot --sort-output')
         os.system('xgettext -L glade data/wicd.ui -j -o po/wicd.pot')
-        
+
 class update_translations(Command):
     description = "update po-files with new strings from wicd.pot"
 
@@ -607,7 +595,7 @@ class compile_translations(Command):
 
     def finalize_options(self):
         pass
- 
+
     def run(self):
         try:
             import wpath
@@ -660,7 +648,7 @@ class compile_translations(Command):
 
 class uninstall(Command):
     description = "remove Wicd using uninstall.sh and install.log"
-         
+
     user_options = []
 
     def initialize_options(self):
@@ -694,7 +682,7 @@ setup(
     description = "A wireless and wired network manager",
     long_description = """A complete network connection manager
 Wicd supports wired and wireless networks, and capable of
-creating and tracking profiles for both.  It has a 
+creating and tracking profiles for both.  It has a
 template-based wireless encryption system, which allows the user
 to easily add encryption methods used.  It ships with some common
 encryption types, such as WPA and WEP. Wicd will automatically
