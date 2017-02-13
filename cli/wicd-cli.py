@@ -54,13 +54,13 @@ def main():
             'org.wicd.daemon.config'
         )
     except dbus.DBusException:
-        print('Error: Could not connect to the daemon. ' + \
-            'Please make sure it is running.')
+        print('Error: Could not connect to the daemon. '
+              'Please make sure it is running.')
         sys.exit(3)
 
     if not daemon:
-        print('Error connecting to wicd via D-Bus. ' + \
-            'Please make sure the wicd service is running.')
+        print('Error connecting to wicd via D-Bus. '
+              'Please make sure the wicd service is running.')
         sys.exit(3)
 
     parser = argparse.ArgumentParser()
@@ -90,8 +90,8 @@ def main():
     op_performed = False
 
     if not (options.wireless or options.wired) and not options.status:
-        print("Please use --wireless or --wired to specify " + \
-        "the type of connection to operate on.")
+        print("Please use --wireless or --wired to specify "
+              "the type of connection to operate on.")
 
     if options.status:
         status, info = daemon.GetConnectionStatus()
@@ -111,22 +111,22 @@ def main():
             print(_('Connection type') + ': ' + conn_type)
             if status == misc.WIRELESS:
                 strength = daemon.FormatSignalForPrinting(info[2])
-                print(_('Connected to $A at $B (IP: $C)') \
-                    .replace('$A', info[1]) \
-                    .replace('$B', strength) \
-                    .replace('$C', info[0]))
-                print(_('Network ID: $A') \
-                    .replace('$A', info[3]))
+                print(_('Connected to $A at $B (IP: $C)')
+                      .replace('$A', info[1])
+                      .replace('$B', strength)
+                      .replace('$C', info[0]))
+                print(_('Network ID: $A')
+                      .replace('$A', info[3]))
             else:
-                print(_('Connected to wired network (IP: $A)') \
-                    .replace('$A', info[0]))
+                print(_('Connected to wired network (IP: $A)')
+                      .replace('$A', info[0]))
         else:
             if status == misc.CONNECTING:
                 if info[0] == 'wired':
                     print(_('Connecting to wired network.'))
                 elif info[0] == 'wireless':
-                    print(_('Connecting to wireless network "$A".') \
-                        .replace('$A', info[1]))
+                    print(_('Connecting to wireless network "$A".')
+                          .replace('$A', info[1]))
         op_performed = True
 
     if options.scan and options.wireless:
@@ -143,7 +143,8 @@ def main():
         if options.wireless:
             print('#\tBSSID\t\t\tChannel\tESSID')
             for network_id in range(0, wireless.GetNumberOfNetworks()):
-                print('%s\t%s\t%s\t%s' % (network_id,
+                print('%s\t%s\t%s\t%s' % (
+                    network_id,
                     wireless.GetWirelessProperty(network_id, 'bssid'),
                     wireless.GetWirelessProperty(network_id, 'channel'),
                     wireless.GetWirelessProperty(network_id, 'essid')))
@@ -170,18 +171,18 @@ def main():
             print("Bssid: %s" % wireless.GetWirelessProperty(network_id, "bssid"))
             if wireless.GetWirelessProperty(network_id, "encryption"):
                 print("Encryption: On")
-                print("Encryption Method: %s" % \
-                    wireless.GetWirelessProperty(network_id, "encryption_method"))
+                print("Encryption Method: %s" %
+                      wireless.GetWirelessProperty(network_id, "encryption_method"))
             else:
                 print("Encryption: Off")
-            print("Quality: %s" % \
-                wireless.GetWirelessProperty(network_id, "quality"))
-            print("Mode: %s" % \
-                wireless.GetWirelessProperty(network_id, "mode"))
-            print("Channel: %s" % \
-                wireless.GetWirelessProperty(network_id, "channel"))
-            print("Bit Rates: %s" % \
-                wireless.GetWirelessProperty(network_id, "bitrates"))
+            print("Quality: %s" %
+                  wireless.GetWirelessProperty(network_id, "quality"))
+            print("Mode: %s" %
+                  wireless.GetWirelessProperty(network_id, "mode"))
+            print("Channel: %s" %
+                  wireless.GetWirelessProperty(network_id, "channel"))
+            print("Bit Rates: %s" %
+                  wireless.GetWirelessProperty(network_id, "bitrates"))
         op_performed = True
 
     # network properties
@@ -197,10 +198,11 @@ def main():
                 is_valid_wireless_network_id(wireless, network_id)
             if not options.set_to:
                 print(wireless.GetWirelessProperty(network_id,
-                    options.network_property))
+                                                   options.network_property))
             else:
-                wireless.SetWirelessProperty(network_id, \
-                        options.network_property, options.set_to)
+                wireless.SetWirelessProperty(network_id,
+                                             options.network_property,
+                                             options.set_to)
         elif options.wired:
             if not options.set_to:
                 print(wired.GetWiredProperty(options.network_property))
@@ -212,13 +214,13 @@ def main():
         daemon.Disconnect()
         if options.wireless:
             if wireless.GetCurrentNetworkID(0) > -1:
-                print("Disconnecting from %s on %s" % \
-                    (wireless.GetCurrentNetwork(0),
-                     wireless.DetectWirelessInterface()))
+                print("Disconnecting from %s on %s" %
+                      (wireless.GetCurrentNetwork(0),
+                       wireless.DetectWirelessInterface()))
         elif options.wired:
             if wired.CheckPluggedIn():
-                print("Disconnecting from wired connection on %s" % \
-                    wired.DetectWiredInterface())
+                print("Disconnecting from wired connection on %s" %
+                      wired.DetectWiredInterface())
         op_performed = True
 
     if options.connect:
@@ -227,16 +229,16 @@ def main():
             is_valid_wireless_network_id(wireless, options.network)
             name = wireless.GetWirelessProperty(options.network, 'essid')
             encryption = wireless.GetWirelessProperty(options.network, 'enctype')
-            print("Connecting to %s with %s on %s" % (name, encryption,
-                    wireless.DetectWirelessInterface()))
+            print("Connecting to %s with %s on %s" % (
+                name, encryption, wireless.DetectWirelessInterface()))
             wireless.ConnectWireless(options.network)
 
             check = wireless.CheckIfWirelessConnecting
             status = wireless.CheckWirelessConnectingStatus
             message = wireless.CheckWirelessConnectingMessage
         elif options.wired:
-            print("Connecting to wired connection on %s" % \
-                wired.DetectWiredInterface())
+            print("Connecting to wired connection on %s" %
+                  wired.DetectWiredInterface())
             wired.ConnectWired()
 
             check = wired.CheckIfWiredConnecting
@@ -253,8 +255,8 @@ def main():
             while check():
                 next_ = status()
                 if next_ != last:
-                    # avoid a race condition where status is updated to "done" after
-                    # the loop check
+                    # avoid a race condition where status is updated
+                    # to "done" after the loop check
                     if next_ == "done":
                         break
                     print(message())
@@ -274,7 +276,7 @@ def main():
             print('  Req: %s' % str_properties(t['required']))
             print('---')
             # don't print optionals (yet)
-            #print '  Opt: %s' % str_properties(type['optional'])
+            # print '  Opt: %s' % str_properties(type['optional'])
             i += 1
         op_performed = True
 
@@ -294,8 +296,7 @@ def main():
 
 def is_valid_wireless_network_id(wireless, network_id):
     """ Check if it's a valid wireless network. '"""
-    if not (network_id >= 0 \
-            and network_id < wireless.GetNumberOfNetworks()):
+    if not (network_id >= 0 and network_id < wireless.GetNumberOfNetworks()):
         print('Invalid wireless network identifier.')
         sys.exit(1)
 
@@ -303,8 +304,7 @@ def is_valid_wireless_network_id(wireless, network_id):
 def is_valid_wired_network_id(wired, network_id):
     """ Check if it's a valid wired network. '"""
     num = len(wired.GetWiredProfileList())
-    if not (network_id < num and \
-            network_id >= 0):
+    if not (network_id < num and network_id >= 0):
         print('Invalid wired network identifier.')
         sys.exit(4)
 
