@@ -29,45 +29,44 @@ class SizeError(IOError):
     """ Custom error class. """
     pass
 
-class LogFile(file):
+class LogFile():
     """LogFile(name, [mode="w"], [maxsize=360000])
-    
+
     Opens a new file object. After writing <maxsize> bytes a SizeError
     will be raised.
-    
+
     """
     def __init__(self, name, mode="a", maxsize=360000):
-        super(LogFile, self).__init__(name, mode)
+        self._file = open(name, mode)
         self.maxsize = maxsize
         self.eol = True
         try:
-            self.written = os.fstat(self.fileno())[6]
+            self.written = os.fstat(self._file.fileno())[6]
         except OSError:
             self.written = 0
 
     def write(self, data):
         self.written += len(data)
-        
+
         data = data.decode('utf-8').encode('utf-8')
         if len(data) <= 0:
             return
         if self.eol:
-            super(LogFile, self).write(self.get_time() + ' :: ')
+            self._file.write(self.get_time() + ' :: ')
             self.eol = False
 
         if data[-1] == '\n':
             self.eol = True
             data = data[:-1]
 
-        super(LogFile, self).write(data.replace(
-                                    '\n', '\n' + self.get_time() + ' :: '))
+        self._file.write(data.replace('\n', '\n' + self.get_time() + ' :: '))
         if self.eol:
-            super(LogFile, self).write('\n')
-            
-        self.flush()
+            self._file.write('\n')
+
+        self._file.flush()
         if self.written > self.maxsize:
             raise SizeError
-        
+
     def get_time(self):
         """ Return a string with the current time nicely formatted.
 
@@ -86,16 +85,16 @@ class LogFile(file):
 
     def note(self, text):
         """Writes a specially formated note text to the file.
-        
+
         The note starts with the string '\\n#*=' so you can easily filter them.
-        
+
         """
         self.write("\n#*===== %s =====\n" % (text,))
 
 
 class ManagedLog(object):
     """ManagedLog(name, [maxsize=360000], [maxsave=9])
-    
+
     A ManagedLog instance is a persistent log object. Write data with the
     write() method. The log size and rotation is handled automatically.
 
@@ -107,7 +106,7 @@ class ManagedLog(object):
         self.maxsave = maxsave
 
     def __repr__(self):
-        return "%s(%r, %r, %r)" % (self.__class__.__name__, self._lf.name, 
+        return "%s(%r, %r, %r)" % (self.__class__.__name__, self._lf.name,
                                    self._lf.maxsize, self.maxsave)
 
     def write(self, data):
@@ -184,10 +183,6 @@ def shiftlogs(basename, maxsave):
     except OSError:
         pass
 
-
-def open(name, maxsize=360000, maxsave=9):
-    """ Open logfile. """
-    return ManagedLog(name, maxsize, maxsave)
 
 def writelog(logobj, data):
     """ Write logfile. """

@@ -1439,7 +1439,7 @@ class BaseWirelessInterface(BaseInterface):
         m = re.findall(bitrates_pattern, bitrates)
         if m:
             # numeric sort
-            ap['bitrates'] = sorted(m, lambda x, y: int(float(x) - float(y)))
+            ap['bitrates'] = sorted(m, key=float)
         else:
             ap['bitrates'] = None
 
