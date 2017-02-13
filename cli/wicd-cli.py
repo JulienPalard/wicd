@@ -16,7 +16,7 @@
 #       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #       MA 02110-1301, USA.
 
-import optparse
+import argparse
 import dbus
 import dbus.service
 import sys
@@ -61,29 +61,29 @@ if not daemon:
         'Please make sure the wicd service is running.')
     sys.exit(3)
 
-parser = optparse.OptionParser()
+parser = argparse.ArgumentParser()
 
-parser.add_option('--network', '-n', type='int', default=-1)
-parser.add_option('--network-property', '-p')
-parser.add_option('--set-to', '-s')
-parser.add_option('--name', '-m')
+parser.add_argument('--network', '-n', type=int, default=-1)
+parser.add_argument('--network-property', '-p')
+parser.add_argument('--set-to', '-s')
+parser.add_argument('--name', '-m')
 
-parser.add_option('--scan', '-S', default=False, action='store_true')
-parser.add_option('--save', '-w', default=False, action='store_true')
-parser.add_option('--list-networks', '-l', default=False, action='store_true')
-parser.add_option('--network-details', '-d', default=False, action='store_true')
-parser.add_option('--disconnect', '-x', default=False, action='store_true')
-parser.add_option('--connect', '-c', default=False, action='store_true')
-parser.add_option('--list-encryption-types', '-e', default=False,
+parser.add_argument('--scan', '-S', default=False, action='store_true')
+parser.add_argument('--save', '-w', default=False, action='store_true')
+parser.add_argument('--list-networks', '-l', default=False, action='store_true')
+parser.add_argument('--network-details', '-d', default=False, action='store_true')
+parser.add_argument('--disconnect', '-x', default=False, action='store_true')
+parser.add_argument('--connect', '-c', default=False, action='store_true')
+parser.add_argument('--list-encryption-types', '-e', default=False,
     action='store_true')
 # short options for these aren't great.
-parser.add_option('--wireless', '-y', default=False, action='store_true')
-parser.add_option('--wired', '-z', default=False, action='store_true')
-parser.add_option('--load-profile', '-o', default=False, action='store_true')
-parser.add_option('--status', '-i', default=False,
-    action='store_true') # -i(nfo)
+parser.add_argument('--wireless', '-y', default=False, action='store_true')
+parser.add_argument('--wired', '-z', default=False, action='store_true')
+parser.add_argument('--load-profile', '-o', default=False, action='store_true')
+parser.add_argument('--status', '-i', default=False,
+                    action='store_true') # -i(nfo)
 
-options, arguments = parser.parse_args()
+options = parser.parse_args()
 
 op_performed = False
 
@@ -318,4 +318,3 @@ if not op_performed:
     print("No operations performed.")
 
 sys.exit(exit_status)
-
