@@ -15,8 +15,8 @@ Just use the original wicd, I won't keep python 2 compatibility.
 
 Wicd was previously hosted on [launchpad](https://launchpad.net/wicd),
 so it was a bazar repository. I first migrated the repository from
-bazar to git. I'm now working on `wicd-curses`, which is already
-usable in python3 at this stage, any feedback welcome.
+bazar to git. wicd-daemon and wicd-curses are now working on Python 3,
+any feedback welcome.
 
 # Original README
 
