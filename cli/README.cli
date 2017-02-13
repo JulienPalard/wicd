@@ -11,7 +11,7 @@ or (same thing, short version)
 Or, you can view the networks Wicd has in its cache:
   python3 wicd-cli.py --wireless --list-networks
 
-If you want to do anything with these networks, you''ll need to note the
+If you want to do anything with these networks, you'll need to note the
 network ID listed on the left side of the above command.
 
 Get the channel number from network 0:
