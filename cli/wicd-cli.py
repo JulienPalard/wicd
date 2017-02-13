@@ -31,6 +31,36 @@ else:
     DBusGMainLoop(set_as_default=True)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--network', '-n', type=int, default=-1)
+    parser.add_argument('--network-property', '-p')
+    parser.add_argument('--set-to', '-s')
+    parser.add_argument('--name', '-m')
+
+    parser.add_argument('--scan', '-S', default=False, action='store_true')
+    parser.add_argument('--save', '-w', default=False, action='store_true')
+    parser.add_argument('--list-networks', '-l', default=False,
+                        action='store_true')
+    parser.add_argument('--network-details', '-d', default=False,
+                        action='store_true')
+    parser.add_argument('--disconnect', '-x', default=False,
+                        action='store_true')
+    parser.add_argument('--connect', '-c', default=False, action='store_true')
+    parser.add_argument('--list-encryption-types', '-e', default=False,
+                        action='store_true')
+    # short options for these aren't great.
+    parser.add_argument('--wireless', '-y', default=False, action='store_true')
+    parser.add_argument('--wired', '-z', default=False, action='store_true')
+    parser.add_argument('--load-profile', '-o', default=False,
+                        action='store_true')
+    parser.add_argument('--status', '-i', default=False,
+                        action='store_true')  # -i(nfo)
+
+    return parser.parse_args()
+
+
 def main():
     misc.RenameProcess('wicd-cli')
 
@@ -64,30 +94,7 @@ def main():
               'Please make sure the wicd service is running.')
         sys.exit(3)
 
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--network', '-n', type=int, default=-1)
-    parser.add_argument('--network-property', '-p')
-    parser.add_argument('--set-to', '-s')
-    parser.add_argument('--name', '-m')
-
-    parser.add_argument('--scan', '-S', default=False, action='store_true')
-    parser.add_argument('--save', '-w', default=False, action='store_true')
-    parser.add_argument('--list-networks', '-l', default=False, action='store_true')
-    parser.add_argument('--network-details', '-d', default=False, action='store_true')
-    parser.add_argument('--disconnect', '-x', default=False, action='store_true')
-    parser.add_argument('--connect', '-c', default=False, action='store_true')
-    parser.add_argument('--list-encryption-types', '-e', default=False,
-        action='store_true')
-    # short options for these aren't great.
-    parser.add_argument('--wireless', '-y', default=False, action='store_true')
-    parser.add_argument('--wired', '-z', default=False, action='store_true')
-    parser.add_argument('--load-profile', '-o', default=False, action='store_true')
-    parser.add_argument('--status', '-i', default=False,
-                        action='store_true') # -i(nfo)
-
-    options = parser.parse_args()
-
+    options = parse_args()
     op_performed = False
 
     if not (options.wireless or options.wired) and not options.status:
@@ -168,12 +175,15 @@ def main():
                 # we're connected to a network, print IP
                 print("IP: %s" % wireless.GetWirelessIP(0))
 
-            print("Essid: %s" % wireless.GetWirelessProperty(network_id, "essid"))
-            print("Bssid: %s" % wireless.GetWirelessProperty(network_id, "bssid"))
+            print("Essid: %s" % wireless.GetWirelessProperty(network_id,
+                                                             "essid"))
+            print("Bssid: %s" % wireless.GetWirelessProperty(network_id,
+                                                             "bssid"))
             if wireless.GetWirelessProperty(network_id, "encryption"):
                 print("Encryption: On")
                 print("Encryption Method: %s" %
-                      wireless.GetWirelessProperty(network_id, "encryption_method"))
+                      wireless.GetWirelessProperty(network_id,
+                                                   "encryption_method"))
             else:
                 print("Encryption: Off")
             print("Quality: %s" %
@@ -208,7 +218,8 @@ def main():
             if not options.set_to:
                 print(wired.GetWiredProperty(options.network_property))
             else:
-                wired.SetWiredProperty(options.network_property, options.set_to)
+                wired.SetWiredProperty(options.network_property,
+                                       options.set_to)
         op_performed = True
 
     if options.disconnect:
@@ -229,7 +240,8 @@ def main():
         if options.wireless and options.network > -1:
             is_valid_wireless_network_id(wireless, options.network)
             name = wireless.GetWirelessProperty(options.network, 'essid')
-            encryption = wireless.GetWirelessProperty(options.network, 'enctype')
+            encryption = wireless.GetWirelessProperty(options.network,
+                                                      'enctype')
             print("Connecting to %s with %s on %s" % (
                 name, encryption, wireless.DetectWirelessInterface()))
             wireless.ConnectWireless(options.network)
@@ -268,16 +280,19 @@ def main():
             op_performed = True
 
     if options.wireless and options.list_encryption_types:
-        et = misc.LoadEncryptionMethods()
+        encryption_types = misc.LoadEncryptionMethods()
         # print 'Installed encryption templates:'
         print('%s\t%-20s\t%s' % ('#', 'Name', 'Description'))
         i = 0
-        for t in et:
-            print('%s\t%-20s\t%s' % (i, t['type'], t['name']))
-            print('  Req: %s' % str_properties(t, t['required']))
+        for encryption_type in encryption_types:
+            print('%s\t%-20s\t%s' % (i, encryption_type['type'],
+                                     encryption_type['name']))
+            print('  Req: %s' % str_properties(encryption_type,
+                                               encryption_type['required']))
             print('---')
             # don't print optionals (yet)
-            # print '  Opt: %s' % str_properties(type['optional'])
+            # print '  Opt: %s' % str_properties(encryption_type,
+            #                                    encryption_type['optional'])
             i += 1
         op_performed = True
 
@@ -317,13 +332,15 @@ def is_valid_wired_network_profile(wired, profile_name):
         sys.exit(5)
 
 
-def str_properties(type, prop):
+def str_properties(encryption_type, prop):
     """ Pretty print optional and required properties. """
     if len(prop) == 0:
         return "None"
     else:
-        tmp = [(x[0], x[1].replace('_', ' ')) for x in type['required']]
+        tmp = [(x[0], x[1].replace('_', ' ')) for x in
+               encryption_type['required']]
         return ', '.join("%s (%s)" % (x, y) for x, y in tmp)
+
 
 if __name__ == '__main__':
     main()
