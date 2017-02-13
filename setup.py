@@ -22,7 +22,6 @@ from distutils.command.build import build as _build
 from distutils.command.install import install as _install
 import os
 import re
-import sys
 import shutil
 import subprocess
 from glob import glob
