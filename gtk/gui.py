@@ -26,8 +26,9 @@ Module containing the code for the main wicd GUI.
 import os
 import sys
 import time
-import gobject
-import gtk
+import gi.repository.GLib as gobject
+from gi.repository import Gtk as gtk
+from gi.repository import Gdk as gdk
 from itertools import chain
 from dbus import DBusException
 
@@ -133,13 +134,13 @@ class WiredProfileChooser:
         wired_net_entry.vbox_top.remove(wired_net_entry.profile_help)
 
         # pylint: disable-msg=E1101
-        dialog.vbox.pack_start(instruct_label, fill=False, expand=False)
+        dialog.vbox.pack_start(instruct_label, False, False, 0)
         # pylint: disable-msg=E1101
-        dialog.vbox.pack_start(wired_net_entry.profile_help, False, False)
+        dialog.vbox.pack_start(wired_net_entry.profile_help, False, False, 0)
         # pylint: disable-msg=E1101
-        dialog.vbox.pack_start(wired_net_entry.hbox_temp, False, False)
+        dialog.vbox.pack_start(wired_net_entry.hbox_temp, False, False, 0)
         # pylint: disable-msg=E1101
-        dialog.vbox.pack_start(stoppopcheckbox, False, False)
+        dialog.vbox.pack_start(stoppopcheckbox, False, False, 0)
         dialog.show_all()
 
         wired_profiles = wired_net_entry.combo_profile_names
@@ -190,10 +191,11 @@ class appGui(object):
         self.wTree.set_translation_domain('wicd')
         self.wTree.add_from_file(gladefile)
         self.window = self.wTree.get_object("window1")
-        width = int(gtk.gdk.screen_width() / 2)
+        screen = gdk.Screen.get_default()
+        width = int(screen.get_width() / 2)
         if width > 530:
             width = 530
-        self.window.resize(width, int(gtk.gdk.screen_height() / 1.7))
+        self.window.resize(width, int(screen.get_height() / 1.7))
 
         dic = {
             "refresh_clicked": self.refresh_clicked,
@@ -224,8 +226,8 @@ class appGui(object):
         self.wired_network_box = gtk.VBox(False, 0)
         self.wired_network_box.show_all()
         self.network_list = gtk.VBox(False, 0)
-        self.all_network_list.pack_start(self.wired_network_box, False, False)
-        self.all_network_list.pack_start(self.network_list, True, True)
+        self.all_network_list.pack_start(self.wired_network_box, False, False, 0)
+        self.all_network_list.pack_start(self.network_list, True, True, 0)
         self.network_list.show_all()
         self.status_area = self.wTree.get_object("connecting_hbox")
         self.status_bar = self.wTree.get_object("statusbar")
@@ -248,7 +250,7 @@ class appGui(object):
         self._wired_showing = False
         self.network_list.set_sensitive(False)
         label = gtk.Label("%s..." % _('Scanning'))
-        self.network_list.pack_start(label)
+        self.network_list.pack_start(label, True, True, 0)
         label.show()
         self.wait_for_events(0.2)
         self.window.connect('delete_event', self.exit)
@@ -311,19 +313,19 @@ class appGui(object):
 
         vbox_ah = gtk.VBox(False, 0)
         self.wired_network_box = gtk.VBox(False, 0)
-        vbox_ah.pack_start(self.chkbox_use_encryption, False, False)
-        vbox_ah.pack_start(self.key_entry, False, False)
+        vbox_ah.pack_start(self.chkbox_use_encryption, False, False, 0)
+        vbox_ah.pack_start(self.key_entry, False, False, 0)
         vbox_ah.show()
         # pylint: disable-msg=E1101
-        dialog.vbox.pack_start(essid_entry)
+        dialog.vbox.pack_start(essid_entry, True, True, 0)
         # pylint: disable-msg=E1101
-        dialog.vbox.pack_start(ip_entry)
+        dialog.vbox.pack_start(ip_entry, True, True, 0)
         # pylint: disable-msg=E1101
-        dialog.vbox.pack_start(channel_entry)
+        dialog.vbox.pack_start(channel_entry, True, True, 0)
         # pylint: disable-msg=E1101
-        dialog.vbox.pack_start(chkbox_use_ics)
+        dialog.vbox.pack_start(chkbox_use_ics, True, True, 0)
         # pylint: disable-msg=E1101
-        dialog.vbox.pack_start(vbox_ah)
+        dialog.vbox.pack_start(vbox_ah, True, True, 0)
         # pylint: disable-msg=E1101
         dialog.vbox.set_spacing(5)
         dialog.show_all()
@@ -375,7 +377,7 @@ class appGui(object):
         scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scroll.add(tree)
         # pylint: disable-msg=E1101
-        dialog.vbox.pack_start(scroll)
+        dialog.vbox.pack_start(scroll, True, True, 0)
         # pylint: disable-msg=E1101
         dialog.vbox.set_spacing(5)
         dialog.show_all()
@@ -447,8 +449,8 @@ class appGui(object):
 
     def key_event(self, widget, event=None):
         """ Handle key-release-events. """
-        if event.state & gtk.gdk.CONTROL_MASK and \
-           gtk.gdk.keyval_name(event.keyval) in ["w", "q"]:
+        if event.state & gdk.ModifierType.CONTROL_MASK and \
+           gdk.keyval_name(event.keyval) in ["w", "q"]:
             self.exit()
 
     def settings_dialog(self, widget, event=None):
@@ -472,9 +474,9 @@ class appGui(object):
         lbl = gtk.Label(_('Hidden Network ESSID'))
         textbox = gtk.Entry()
         # pylint: disable-msg=E1101
-        dialog.vbox.pack_start(lbl)
+        dialog.vbox.pack_start(lbl, True, True, 0)
         # pylint: disable-msg=E1101
-        dialog.vbox.pack_start(textbox)
+        dialog.vbox.pack_start(textbox, True, True, 0)
         dialog.show_all()
         button = dialog.run()
         if button == 1:
@@ -658,12 +660,12 @@ class appGui(object):
         self._remove_items_from_vbox(self.wired_network_box)
         self._remove_items_from_vbox(self.network_list)
         label = gtk.Label("%s..." % _('Scanning'))
-        self.network_list.pack_start(label)
+        self.network_list.pack_start(label, True, True, 0)
         self.network_list.show_all()
         if wired.CheckPluggedIn() or daemon.GetAlwaysShowWiredInterface():
             printLine = True  # In this case we print a separator.
             wirednet = WiredNetworkEntry()
-            self.wired_network_box.pack_start(wirednet, False, False)
+            self.wired_network_box.pack_start(wirednet, False, False, 0)
             wirednet.connect_button.connect("clicked", self.connect,
                                            "wired", 0, wirednet)
             wirednet.disconnect_button.connect("clicked", self.disconnect,
@@ -713,13 +715,12 @@ class appGui(object):
                     continue
                 if printLine:
                     sep = gtk.HSeparator()
-                    self.network_list.pack_start(sep, padding=10, fill=False,
-                                                 expand=False)
+                    self.network_list.pack_start(sep, False, False, 10)
                     sep.show()
                 else:
                     printLine = True
                 tempnet = WirelessNetworkEntry(x)
-                self.network_list.pack_start(tempnet, False, False)
+                self.network_list.pack_start(tempnet, False, False, 0)
                 tempnet.connect_button.connect("clicked",
                                                self.connect, "wireless", x,
                                                tempnet)
@@ -735,7 +736,7 @@ class appGui(object):
                 label = gtk.Label(_('Wireless Kill Switch Enabled') + ".")
             else:
                 label = gtk.Label(_('No wireless networks found.'))
-            self.network_list.pack_start(label)
+            self.network_list.pack_start(label, True, True, 0)
             label.show()
         self.update_connect_buttons(force_check=True)
         self.network_list.set_sensitive(True)

@@ -35,7 +35,7 @@ from pipes import quote
 import socket
 
 from wicd.translations import _
-
+import gi.repository.GLib as gobject
 # wicd imports
 from . import wpath
 

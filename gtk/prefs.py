@@ -24,8 +24,8 @@ handles recieving/sendings the settings from/to the daemon.
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import gtk
-import gobject
+from gi.repository import Gtk as gtk
+import gi.repository.GLib as gobject
 import os
 
 from wicd import misc

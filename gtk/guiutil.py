@@ -16,7 +16,7 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import gtk
+from gi.repository import Gtk as gtk
 import os.path
 
 import wicd.wpath as wpath
@@ -150,8 +150,8 @@ class LabelEntry(gtk.HBox):
         self.label = LeftAlignedLabel()
         self.label.set_text(text)
         self.label.set_size_request(170, -1)
-        self.pack_start(self.label, fill=True, expand=True)
-        self.pack_start(self.entry, fill=False, expand=False)
+        self.pack_start(self.label, True, True, 0)
+        self.pack_start(self.entry, False, False, 0)
         self.label.show()
         self.entry.show()
         self.entry.connect('focus-out-event', self.hide_characters)
@@ -213,9 +213,9 @@ class ProtectedLabelEntry(gtk.HBox):
         self.check.set_size_request(5, -1)
         self.check.set_active(False)
         self.check.set_focus_on_click(False)
-        self.pack_start(self.label, fill=True, expand=True)
-        self.pack_start(self.check, fill=True, expand=True)
-        self.pack_start(self.entry, fill=False, expand=False)
+        self.pack_start(self.label, True, True, 0)
+        self.pack_start(self.check, True, True, 0)
+        self.pack_start(self.entry, False, False, 0)
         self.label.show()
         self.check.show()
         self.entry.show()
@@ -256,8 +256,8 @@ class LabelCombo(gtk.HBox):
         cell = gtk.CellRendererText()
         self.combo.pack_start(cell, True)
         self.combo.add_attribute(cell, 'text', 0)
-        self.pack_start(self.label, fill=True, expand=True)
-        self.pack_start(self.combo, fill=False, expand=False)
+        self.pack_start(self.label, True, True, 0)
+        self.pack_start(self.combo, False, False, 0)
         self.label.show()
         self.combo.show()
         self.show()

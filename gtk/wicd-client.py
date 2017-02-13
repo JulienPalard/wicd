@@ -38,16 +38,16 @@ class TrayIcon() -- Parent class of TrayIconGUI and IconConnectionInfo.
 #
 
 import sys
-import gtk
-import gobject
+import gi
+gi.require_version('Gtk', '2.0')
+from gi.repository import Gtk as gtk
+import gi.repository.GLib as gobject
 import getopt
 import os
-import pango
+from gi.repository import Pango
 import atexit
 from dbus import DBusException
 
-import pygtk
-pygtk.require('2.0')
 
 USE_APP_INDICATOR = True
 try:
@@ -92,8 +92,9 @@ if __name__ == '__main__':
 daemon = wireless = wired = lost_dbus_id = None
 DBUS_AVAIL = False
 
-theme = gtk.icon_theme_get_default()
-theme.append_search_path(wpath.images)
+# TODO python3
+# theme = gtk.icon_theme_get_default()
+# theme.append_search_path(wpath.images)
 
 
 def catchdbus(func):
@@ -129,10 +130,9 @@ class NetworkMenuItem(gtk.ImageMenuItem):
         gtk.ImageMenuItem.__init__(self)
         self.label = gtk.Label(lbl)
         if is_active:
-            atrlist = pango.AttrList()
-            atrlist.insert(pango.AttrWeight(pango.WEIGHT_BOLD, 0, 50))
+            atrlist = Pango.AttrList()
+            atrlist.insert(Pango.AttrWeight(Pango.WEIGHT_BOLD, 0, 50))
             self.label.set_attributes(atrlist)
-        self.label.set_justify(gtk.JUSTIFY_LEFT)
         self.label.set_alignment(0, 0)
         self.add(self.label)
         self.label.show()
@@ -712,10 +712,10 @@ TX:'''))
 
             if type_ == "__wired__":
                 image.set_from_icon_name("network-wired",
-                    gtk.ICON_SIZE_SMALL_TOOLBAR)
+                    gtk.IconSize.SMALL_TOOLBAR)
             else:
                 image.set_from_icon_name(self._get_img(n_id),
-                    gtk.ICON_SIZE_SMALL_TOOLBAR)
+                    gtk.IconSize.SMALL_TOOLBAR)
             item.set_image(image)
             del image
             item.connect("activate", network_selected, type_, n_id)
@@ -972,9 +972,9 @@ TX:'''))
         class IndicatorTrayIconGUI(gtk.StatusIcon, TrayIconGUI):
             """ Class for creating the wicd AppIndicator.
             This is required on recent versions of Unity (>=13.04).
-            
+
             Uses appindicator.Indicator to implement a tray icon.
-            
+
             """
             def __init__(self, parent):
                 TrayIcon.TrayIconGUI.__init__(self, parent)
@@ -1017,7 +1017,7 @@ TX:'''))
                 if path != self.current_icon_path:
                     self.current_icon_path = path
                     self.ind.set_icon(path)
-                    
+
             def set_from_name(self, name=None):
                 """ Sets a new tray icon picture. """
                 if name != self.current_icon_name:
@@ -1035,7 +1035,7 @@ TX:'''))
 
             def set_tooltip(self, str):
                 """ Set the tooltip for this tray icon.
-                
+
                 Since AppIndicators do not support tooltips, actually
                 sets the label for the top menu item associated with
                 this tray icon.
