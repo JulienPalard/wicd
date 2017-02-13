@@ -273,7 +273,7 @@ def main():
         i = 0
         for t in et:
             print('%s\t%-20s\t%s' % (i, t['type'], t['name']))
-            print('  Req: %s' % str_properties(t['required']))
+            print('  Req: %s' % str_properties(t, t['required']))
             print('---')
             # don't print optionals (yet)
             # print '  Opt: %s' % str_properties(type['optional'])
@@ -315,7 +315,8 @@ def is_valid_wired_network_profile(wired, profile_name):
         print('Profile of that name does not exist.')
         sys.exit(5)
 
-def str_properties(prop):
+
+def str_properties(type, prop):
     """ Pretty print optional and required properties. """
     if len(prop) == 0:
         return "None"
