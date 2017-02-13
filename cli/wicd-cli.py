@@ -16,10 +16,11 @@
 #       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #       MA 02110-1301, USA.
 
+import sys
 import argparse
+
 import dbus
 import dbus.service
-import sys
 from wicd import misc
 from wicd.translations import _
 
